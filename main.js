@@ -1,9 +1,124 @@
 import './style.css'
+import html2canvas from 'html2canvas';
 
 const video = document.getElementById('webcam');
 const shutterBtn = document.getElementById('shutter-btn');
+const saveBtn = document.getElementById('save-btn');
 const cameraContainer = document.querySelector('.camera-container');
 const photoWall = document.getElementById('photo-wall');
+
+// Save Wall Logic
+saveBtn.addEventListener('click', async () => {
+    try {
+        saveBtn.style.display = 'none'; // Hide button
+
+        // Create A4 container
+        const a4Container = document.createElement('div');
+        a4Container.classList.add('a4-export-container');
+        document.body.appendChild(a4Container);
+
+        // A4 Dimensions (with padding)
+        const a4Width = 794;
+        const a4Height = 1123;
+        const padding = 60; // Increased padding
+        const contentWidth = a4Width - (padding * 2);
+        const contentHeight = a4Height - (padding * 2);
+
+        // Get all photos
+        const photos = Array.from(document.querySelectorAll('.photo-wall .photo'));
+
+        if (photos.length === 0) {
+            alert("No photos to save!");
+            document.body.removeChild(a4Container);
+            saveBtn.style.display = 'block';
+            return;
+        }
+
+        // Calculate Bounding Box of current photos
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        photos.forEach(photo => {
+            const rect = photo.getBoundingClientRect();
+            // Use visual bounds (getBoundingClientRect) to account for rotation
+            minX = Math.min(minX, rect.left);
+            minY = Math.min(minY, rect.top);
+            maxX = Math.max(maxX, rect.right);
+            maxY = Math.max(maxY, rect.bottom);
+        });
+
+        const totalWidth = maxX - minX;
+        const totalHeight = maxY - minY;
+
+        // Calculate Scale to fit A4
+        const scaleX = contentWidth / totalWidth;
+        const scaleY = contentHeight / totalHeight;
+        const scale = Math.min(scaleX, scaleY, 1); // Don't scale up if it fits, only down. Or maybe we want to fill? Let's cap at 1 to avoid pixelation.
+
+        // Center the content in A4
+        const scaledWidth = totalWidth * scale;
+        const scaledHeight = totalHeight * scale;
+        const offsetX = (a4Width - scaledWidth) / 2;
+        const offsetY = (a4Height - scaledHeight) / 2;
+
+        // Clone and map photos
+        photos.forEach(photo => {
+            const clone = photo.cloneNode(true);
+
+            // Use getBoundingClientRect for the source position as well to match the bounding box logic
+            const rect = photo.getBoundingClientRect();
+            const x = rect.left;
+            const y = rect.top;
+
+            // Calculate relative position to bounding box
+            const relX = x - minX;
+            const relY = y - minY;
+
+            // Scale position
+            const newLeft = offsetX + (relX * scale);
+            const newTop = offsetY + (relY * scale);
+
+            clone.style.left = `${newLeft}px`;
+            clone.style.top = `${newTop}px`;
+            clone.style.position = 'absolute';
+
+            // Scale the element itself
+            // We need to preserve existing rotation
+            // The clone has the rotation in style.transform.
+            // We append scale to it.
+            // Note: transform order matters.
+            const currentTransform = clone.style.transform || '';
+            clone.style.transform = `${currentTransform} scale(${scale})`;
+            clone.style.transformOrigin = 'top left'; // Important for positioning
+
+            clone.classList.remove('draggable');
+            a4Container.appendChild(clone);
+        });
+
+        // Wait a moment for images to load in clone if needed (usually instant for dataURLs)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const canvas = await html2canvas(a4Container, {
+            backgroundColor: null,
+            scale: 2, // High quality
+            logging: false,
+            useCORS: true
+        });
+
+        const link = document.createElement('a');
+        link.download = `polaroid-wall-a4-${Date.now()}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(a4Container);
+
+    } catch (err) {
+        console.error("Error saving wall:", err);
+        alert("Failed to save photo wall.");
+    } finally {
+        saveBtn.style.display = 'block';
+    }
+});
 
 // Webcam Setup
 async function setupCamera() {
