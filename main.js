@@ -3,15 +3,13 @@ import html2canvas from 'html2canvas';
 
 const video = document.getElementById('webcam');
 const shutterBtn = document.getElementById('shutter-btn');
-const saveBtn = document.getElementById('save-btn');
+const printBtn = document.getElementById('print-btn');
 const cameraContainer = document.querySelector('.camera-container');
 const photoWall = document.getElementById('photo-wall');
 
-// Save Wall Logic
-saveBtn.addEventListener('click', async () => {
+// Print button triggers save wall function
+printBtn.addEventListener('click', async () => {
     try {
-        saveBtn.style.display = 'none'; // Hide button
-
         // Create A4 container
         const a4Container = document.createElement('div');
         a4Container.classList.add('a4-export-container');
@@ -30,7 +28,6 @@ saveBtn.addEventListener('click', async () => {
         if (photos.length === 0) {
             alert("No photos to save!");
             document.body.removeChild(a4Container);
-            saveBtn.style.display = 'block';
             return;
         }
 
@@ -115,8 +112,6 @@ saveBtn.addEventListener('click', async () => {
     } catch (err) {
         console.error("Error saving wall:", err);
         alert("Failed to save photo wall.");
-    } finally {
-        saveBtn.style.display = 'block';
     }
 });
 
@@ -146,6 +141,7 @@ shutterBtn.addEventListener('click', () => {
     takePhoto();
 });
 
+
 function playShutterSound() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
@@ -168,16 +164,34 @@ function playShutterSound() {
     osc.stop(ctx.currentTime + 0.1);
 }
 
-function takePhoto() {
-    // Flash effect
-    const flash = document.querySelector('.flash');
-    flash.style.backgroundColor = '#fff';
-    flash.style.boxShadow = '0 0 50px #fff';
-    setTimeout(() => {
-        flash.style.backgroundColor = '#eee';
-        flash.style.boxShadow = 'inset 0 0 10px rgba(0,0,0,0.1)';
-    }, 100);
+function playEjectionSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
 
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    // Low frequency motor/gear sound
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(120, ctx.currentTime + 0.3);
+    osc.frequency.linearRampToValueAtTime(60, ctx.currentTime + 0.8);
+
+    // Fade in and out
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
+    gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.7);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.9);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.9);
+}
+
+function takePhoto() {
     // Capture image
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -221,6 +235,7 @@ function createPhotoElement(url) {
     // Trigger eject animation
     requestAnimationFrame(() => {
         photo.classList.add('ejecting');
+        playEjectionSound(); // Play mechanical sound during ejection
     });
 
     // Start developing
@@ -250,6 +265,17 @@ function makeDraggable(element) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
     let zIndex = 1000;
+
+    // Double-click to delete
+    element.addEventListener('dblclick', () => {
+        element.classList.add('crumpling');
+        element.style.cursor = 'default';
+
+        // Remove from DOM after animation
+        setTimeout(() => {
+            element.remove();
+        }, 500);
+    });
 
     element.addEventListener('mousedown', (e) => {
         isDragging = true;

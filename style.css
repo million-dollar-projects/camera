@@ -50,7 +50,19 @@ body {
 .camera-body {
     width: 300px;
     height: 320px;
-    background-color: var(--camera-bg);
+    background-color: #2c3e50;
+    /* High-contrast faux leather texture */
+    background-image:
+        /* Bump 1: Highlight & Shadow */
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2) 1px, transparent 2px),
+        radial-gradient(circle at 65% 65%, rgba(0, 0, 0, 0.5) 1px, transparent 2px),
+        /* Bump 2: Highlight & Shadow (Offset) */
+        radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2) 1px, transparent 2px),
+        radial-gradient(circle at 65% 65%, rgba(0, 0, 0, 0.5) 1px, transparent 2px);
+    background-position:
+        0 0, 0 0,
+        3px 3px, 3px 3px;
+    background-size: 6px 6px;
     border-radius: 30px;
     position: relative;
     display: flex;
@@ -58,8 +70,9 @@ body {
     align-items: center;
     padding-top: 30px;
     box-shadow:
-        inset -5px -5px 10px rgba(0, 0, 0, 0.1),
-        inset 5px 5px 10px rgba(255, 255, 255, 0.5);
+        inset -5px -5px 10px rgba(0, 0, 0, 0.5),
+        inset 5px 5px 10px rgba(255, 255, 255, 0.1),
+        10px 10px 20px rgba(0, 0, 0, 0.4);
 }
 
 .camera-stripe {
@@ -69,11 +82,11 @@ body {
     width: 100%;
     height: 20px;
     background: linear-gradient(90deg,
-            #ff9ff3 0%, #ff9ff3 20%,
-            #feca57 20%, #feca57 40%,
-            #ff6b6b 40%, #ff6b6b 60%,
-            #48dbfb 60%, #48dbfb 80%,
-            #1dd1a1 80%, #1dd1a1 100%);
+            #b8b8b8 0%, #d4d4d4 25%, #a8a8a8 50%,
+            #8b6f47 50%, #a0826d 75%, #6d5638 100%);
+    box-shadow:
+        inset 0 2px 3px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.3);
     z-index: 2;
 }
 
@@ -97,29 +110,43 @@ body {
     /* Mirror effect */
 }
 
-.flash {
+.print-button {
     position: absolute;
     top: 20px;
     right: 30px;
-    width: 40px;
-    height: 40px;
-    background-color: #eee;
-    border-radius: 8px;
-    border: 2px solid #ccc;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: #2c3e50;
+    border: 3px solid #bdc3c7;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow:
+        0 3px 0 #555,
+        0 5px 10px rgba(0, 0, 0, 0.3),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
 }
 
-.flash::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
-    background-color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+.print-button:hover {
+    background: linear-gradient(135deg, #aab7b8, #95a5a6);
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 0 #555,
+        0 6px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.print-button:active {
+    transform: translateY(3px);
+    box-shadow:
+        0 0 0 #555,
+        inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .shutter-button {
@@ -210,6 +237,23 @@ body {
     filter: grayscale(0%) blur(0);
 }
 
+/* Film grain effect */
+.photo.developed .photo-content::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
+    background-size: 1px 1px;
+    opacity: 0.4;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
 .photo-date {
     margin-top: 10px;
     font-family: 'Permanent Marker', cursive;
@@ -228,6 +272,23 @@ body {
     }
 }
 
+@keyframes crumple {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(0.8) rotate(15deg);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(0.1) rotate(45deg);
+        opacity: 0;
+    }
+}
+
 /* Draggable state */
 .photo.draggable {
     position: absolute;
@@ -243,46 +304,13 @@ body {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-.save-button {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 60px;
-    height: 30px;
-    background: linear-gradient(to bottom, #95a5a6, #7f8c8d);
-    color: #2c3e50;
-    border: none;
-    border-radius: 4px;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 900;
-    font-size: 10px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    box-shadow:
-        0 2px 0 #555,
-        0 3px 5px rgba(0, 0, 0, 0.3);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: uppercase;
-    transition: all 0.1s;
-}
-
-.save-button:hover {
-    background: linear-gradient(to bottom, #aab7b8, #95a5a6);
-}
-
-.save-button:active {
-    transform: translateY(2px);
-    box-shadow:
-        0 0 0 #555,
-        inset 0 1px 3px rgba(0, 0, 0, 0.4);
+.photo.crumpling {
+    animation: crumple 0.5s ease-out forwards;
+    pointer-events: none;
 }
 
 /* Capture State Styles */
-body.capturing .camera-container,
-body.capturing .save-button {
+body.capturing .camera-container {
     display: none !important;
 }
 
