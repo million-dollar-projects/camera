@@ -1,0 +1,244 @@
+:root {
+    --camera-bg: #fdf6e3;
+    --camera-leather: #2c3e50;
+    --camera-accent: #e74c3c;
+    --camera-metal: #95a5a6;
+    --photo-border: #fff;
+    --bg-color: #e0e0e0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+#app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.photo-wall {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.camera-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    filter: drop-shadow(10px 10px 20px rgba(0, 0, 0, 0.3));
+    transition: transform 0.1s;
+}
+
+.camera-body {
+    width: 300px;
+    height: 320px;
+    background-color: var(--camera-bg);
+    border-radius: 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    box-shadow:
+        inset -5px -5px 10px rgba(0, 0, 0, 0.1),
+        inset 5px 5px 10px rgba(255, 255, 255, 0.5);
+}
+
+.camera-stripe {
+    position: absolute;
+    top: 160px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(90deg,
+            #ff9ff3 0%, #ff9ff3 20%,
+            #feca57 20%, #feca57 40%,
+            #ff6b6b 40%, #ff6b6b 60%,
+            #48dbfb 60%, #48dbfb 80%,
+            #1dd1a1 80%, #1dd1a1 100%);
+    z-index: 2;
+}
+
+.viewfinder {
+    width: 220px;
+    height: 220px;
+    background-color: #111;
+    border-radius: 50%;
+    border: 15px solid var(--camera-metal);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    /* Mirror effect */
+}
+
+.flash {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    background-color: #eee;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.flash::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+.shutter-button {
+    position: absolute;
+    bottom: 40px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--camera-accent);
+    border-radius: 50%;
+    border: 4px solid #c0392b;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #96281b;
+    transition: transform 0.1s, box-shadow 0.1s;
+    z-index: 4;
+}
+
+.shutter-button:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #96281b;
+}
+
+.output-slot {
+    position: absolute;
+    top: -10px;
+    /* Hidden behind the body initially, but we want it to eject upwards? No, usually downwards or upwards. Let's say upwards for this design as requested "from top" */
+    /* Wait, user said "pop out from top of camera". */
+    /* So the slot should be at the top. */
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 10px;
+    background-color: #1a1a1a;
+    border-radius: 5px;
+    z-index: 1;
+    /* Behind the camera body front face if possible, or we use z-index tricks */
+}
+
+/* Actually, to make it pop from top, we need the photo to be behind the camera body but in front of the background. */
+/* Let's adjust z-indices. */
+/* Camera body needs to cover the photo initially. */
+
+.camera-body {
+    z-index: 10;
+}
+
+.photo {
+    position: absolute;
+    width: 200px;
+    height: 240px;
+    background-color: #fff;
+    padding: 10px 10px 40px 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: filter 3s ease-in-out;
+    /* Initial state for ejection */
+    top: 20px;
+    left: 50px;
+    /* Relative to camera container */
+    z-index: 5;
+    /* Behind camera body (10) */
+    transform: rotate(0deg);
+}
+
+.photo.ejecting {
+    animation: eject 1s forwards;
+}
+
+.photo-content {
+    width: 100%;
+    height: 180px;
+    background-color: #000;
+    overflow: hidden;
+}
+
+.photo-content img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) blur(10px);
+    transition: filter 5s ease;
+}
+
+.photo.developed .photo-content img {
+    filter: grayscale(0%) blur(0);
+}
+
+.photo-date {
+    margin-top: 10px;
+    font-family: 'Permanent Marker', cursive;
+    color: #333;
+    font-size: 14px;
+    transform: rotate(-2deg);
+}
+
+@keyframes eject {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-220px);
+    }
+}
+
+/* Draggable state */
+.photo.draggable {
+    position: absolute;
+    z-index: 200;
+    /* Above everything */
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.photo.draggable:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}

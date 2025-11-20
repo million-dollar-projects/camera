@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Polaroid Camera</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <div class="photo-wall" id="photo-wall">
+      <!-- Photos will be dropped here -->
+    </div>
+
+    <div class="camera-container">
+      <div class="camera-body">
+        <div class="viewfinder">
+          <video id="webcam" autoplay playsinline muted></video>
+        </div>
+        <div class="lens-ring"></div>
+        <div class="flash"></div>
+        <div class="shutter-button" id="shutter-btn"></div>
+        <div class="camera-stripe"></div>
+        <div class="output-slot">
+          <div class="slot-opening"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>
